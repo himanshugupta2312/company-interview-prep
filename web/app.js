@@ -215,7 +215,7 @@ for (const element of [
   elements.difficulty,
   elements.period,
 ]) {
-  element.addEventListener("change", loadQuestions);
+  element.addEventListener("change", () => loadQuestions());
 }
 elements.refreshButton.addEventListener("click", refreshSources);
 elements.loadMoreButton.addEventListener("click", loadMoreQuestions);

@@ -32,6 +32,105 @@ LEETCODE_WINDOW_LABELS = {
     "more than six months": "More than 6 months",
     "all": "All time",
 }
+POSITION_KEYWORDS = {
+    "frontend": (
+        "frontend",
+        "front-end",
+        "front end",
+        "javascript",
+        "typescript",
+        "html",
+        "css",
+        "browser",
+        "react",
+        "vue",
+        "angular",
+        "web",
+        "user interface",
+    ),
+    "backend": (
+        "backend",
+        "back-end",
+        "back end",
+        "server",
+        "api",
+        "database",
+        "sql",
+        "cache",
+        "queue",
+        "distributed",
+        "network",
+        "storage",
+        "key-value",
+        "url",
+        "crawler",
+        "notification",
+        "chat",
+        "feed",
+        "search",
+        "rate limiter",
+        "consistent hashing",
+        "scaling",
+    ),
+    "mobile": (
+        "mobile",
+        "ios",
+        "android",
+        "array",
+        "string",
+        "hash table",
+        "graph",
+        "tree",
+    ),
+    "data": (
+        "data",
+        "machine learning",
+        "statistics",
+        "sql",
+        "database",
+        "pipeline",
+        "stream",
+        "graph",
+        "array",
+        "search",
+    ),
+    "platform": (
+        "platform",
+        "infrastructure",
+        "devops",
+        "reliability",
+        "monitoring",
+        "metrics",
+        "alerting",
+        "scaling",
+        "distributed",
+        "storage",
+        "queue",
+        "network",
+        "rate limiter",
+    ),
+    "security": (
+        "security",
+        "authentication",
+        "authorization",
+        "encryption",
+        "access control",
+        "cryptography",
+    ),
+}
+GENERAL_POSITION_WORDS = {
+    "engineer",
+    "engineering",
+    "developer",
+    "software",
+    "senior",
+    "junior",
+    "staff",
+    "principal",
+    "lead",
+    "sde",
+    "swe",
+}
 
 BEHAVIORAL_QUESTIONS = (
     {
@@ -198,6 +297,30 @@ def _read_system_design_questions() -> list[dict[str, object]]:
     return questions
 
 
+def _position_keywords(position: str) -> tuple[str, ...]:
+    normalized = re.sub(r"[^a-z0-9]+", " ", position.casefold()).strip()
+    if not normalized:
+        return ()
+    role_patterns = (
+        (r"\b(front[ -]?end|ui|web)\b", "frontend"),
+        (r"\b(back[ -]?end|server)\b", "backend"),
+        (r"\b(mobile|ios|android)\b", "mobile"),
+        (r"\b(data|machine learning|ml|ai)\b", "data"),
+        (r"\b(platform|devops|sre|infrastructure|reliability)\b", "platform"),
+        (r"\b(security|cybersecurity|appsec)\b", "security"),
+    )
+    for pattern, category in role_patterns:
+        if re.search(pattern, normalized):
+            return POSITION_KEYWORDS[category]
+
+    words = tuple(
+        word
+        for word in normalized.split()
+        if word not in GENERAL_POSITION_WORDS and len(word) > 1
+    )
+    return words
+
+
 @lru_cache(maxsize=1)
 def _load_question_data() -> tuple[list[dict[str, object]], list[str], list[dict[str, object]]]:
     leetcode, companies = _read_leetcode_questions()
@@ -239,6 +362,7 @@ def _get_questions(filters: dict[str, str]) -> dict[str, object]:
     selected_difficulty = filters.get("difficulty", "").casefold()
     selected_window = filters.get("period", "").casefold()
     search = filters.get("search", "").strip().casefold()
+    position_keywords = _position_keywords(filters.get("position", ""))
     try:
         offset = max(0, int(filters.get("offset", "0")))
         limit = min(100, max(1, int(filters.get("limit", "50"))))
@@ -261,6 +385,11 @@ def _get_questions(filters: dict[str, str]) -> dict[str, object]:
                     continue
             if search and search not in str(question["search_text"]):
                 continue
+            if position_keywords and not any(
+                keyword in str(question["search_text"])
+                for keyword in position_keywords
+            ):
+                continue
             results.append(question)
 
     if selected_type in ("all", "system-design", "behavioral"):
@@ -268,6 +397,15 @@ def _get_questions(filters: dict[str, str]) -> dict[str, object]:
             if selected_type != "all" and question["type"] != selected_type:
                 continue
             if search and search not in str(question["search_text"]):
+                continue
+            if (
+                question["type"] == "system-design"
+                and position_keywords
+                and not any(
+                    keyword in str(question["search_text"])
+                    for keyword in position_keywords
+                )
+            ):
                 continue
             results.append(question)
 
@@ -293,9 +431,12 @@ def _get_questions(filters: dict[str, str]) -> dict[str, object]:
         "has_more": offset + limit < total,
         "refreshed_at": refreshed_at,
         "position_notice": (
-            "The upstream company lists do not include job-title data. "
-            "Company questions therefore remain visible for any selected position; "
-            "no role-specific match is inferred."
+            "Position matches are inferred from role keywords in question titles and topics, "
+            "not verified job-title history. General behavioral prompts remain included."
+            if position_keywords
+            else "The upstream lists do not tag questions by job title. Broad software-engineering "
+            "roles use the full company list; specialized positions match titles and topics when "
+            "keywords are available. Behavioral prompts remain general."
         ),
     }
 

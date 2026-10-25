@@ -30,9 +30,11 @@ company-specific questions.
   upstream time-window lists. Leave the company blank to browse general
   system-design and behavioral practice.
 - The upstream company problem lists do not identify the job position for
-  each question. The optional position field is accepted as context, but does
-  not remove or relabel questions; the UI calls out this limitation rather
-  than guessing which role asked a question.
+  each question. The position field uses keyword-based relevance matching
+  against question titles and topics for specialized roles; broad software
+  engineering titles keep the full company list. This is an estimate, not
+  verified role-specific interview history. General behavioral prompts remain
+  included for every position.
 - The upstream sources do not provide a behavioral interview dataset. The app
   includes a small set of general, original practice prompts, not
   company-specific questions. A public behavioral-question repository is

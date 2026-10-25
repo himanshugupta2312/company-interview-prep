@@ -68,14 +68,48 @@ class QuestionDataTests(unittest.TestCase):
             patch.object(app, "SOURCES_DIRECTORY", self.sources),
             patch.object(app, "REFRESH_MARKER", self.marker),
         ):
-            data = app.get_questions({"company": "example co", "position": "Backend Engineer"})
+            data = app.get_questions({"company": "example co", "position": "Senior Software Engineer"})
 
         self.assertEqual(data["selected_company"], "Example Co")
-        self.assertEqual(data["selected_position"], "Backend Engineer")
+        self.assertEqual(data["selected_position"], "Senior Software Engineer")
         self.assertEqual(data["counts"]["leetcode"], 1)
         self.assertEqual(data["counts"]["system-design"], 1)
         self.assertEqual(data["counts"]["behavioral"], len(app.BEHAVIORAL_QUESTIONS))
         self.assertTrue(data["position_notice"])
+
+    def test_specialized_position_filters_by_question_topics(self) -> None:
+        with (
+            patch.object(app, "SOURCES_DIRECTORY", self.sources),
+            patch.object(app, "REFRESH_MARKER", self.marker),
+        ):
+            frontend = app.get_questions(
+                {"company": "Example Co", "position": "Frontend Engineer"}
+            )
+            broad = app.get_questions(
+                {"company": "Example Co", "position": "Senior Software Engineer"}
+            )
+            backend = app.get_questions(
+                {"company": "Example Co", "position": "Backend Engineer"}
+            )
+
+        self.assertEqual(frontend["counts"]["leetcode"], 0)
+        self.assertEqual(frontend["counts"]["system-design"], 0)
+        self.assertEqual(
+            frontend["counts"]["behavioral"],
+            len(app.BEHAVIORAL_QUESTIONS),
+        )
+        self.assertIn("inferred", frontend["position_notice"])
+        self.assertEqual(backend["counts"]["leetcode"], 0)
+        self.assertEqual(backend["counts"]["system-design"], 1)
+        self.assertEqual(
+            backend["counts"]["behavioral"],
+            len(app.BEHAVIORAL_QUESTIONS),
+        )
+        self.assertEqual(broad["counts"]["leetcode"], 1)
+        self.assertEqual(
+            broad["counts"]["behavioral"],
+            len(app.BEHAVIORAL_QUESTIONS),
+        )
 
     def test_time_and_difficulty_filters_apply_to_leetcode_questions(self) -> None:
         with (
