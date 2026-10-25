@@ -13,6 +13,7 @@ class QuestionDataTests(unittest.TestCase):
         self.addCleanup(self.temporary_directory.cleanup)
         self.root = Path(self.temporary_directory.name)
         self.sources = self.root / "sources"
+        (self.sources / app.SOURCES[0].name / ".git").mkdir(parents=True)
         leetcode = self.sources / app.SOURCES[0].name / "Example Co"
         leetcode.mkdir(parents=True)
         for filename in ("1. Thirty Days.csv", "5. All.csv"):

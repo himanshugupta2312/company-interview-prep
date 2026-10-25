@@ -92,7 +92,9 @@ def _read_leetcode_questions() -> tuple[list[dict[str, object]], list[str]]:
 
     by_question: dict[tuple[str, str], dict[str, object]] = {}
     companies: list[str] = []
-    for company_directory in sorted(path for path in root.iterdir() if path.is_dir()):
+    for company_directory in sorted(
+        path for path in root.iterdir() if path.is_dir() and not path.name.startswith(".")
+    ):
         company = company_directory.name
         companies.append(company)
         for csv_path in sorted(company_directory.rglob("*.csv")):
