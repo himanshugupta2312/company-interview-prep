@@ -54,6 +54,22 @@ class QuestionDataTests(unittest.TestCase):
         app._load_question_data.cache_clear()
         self.addCleanup(app._load_question_data.cache_clear)
 
+    def test_flask_serves_the_ui_and_assets(self) -> None:
+        client = app.app.test_client()
+
+        for path in ("/", "/app.js", "/styles.css"):
+            with client.get(path) as response:
+                self.assertEqual(response.status_code, 200)
+
+    def test_flask_questions_endpoint_returns_validation_errors(self) -> None:
+        response = app.app.test_client().get("/api/questions?offset=first")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json(),
+            {"error": "Question offset and limit must be integers."},
+        )
+
     def test_company_problem_csv_files_are_aggregated_without_duplicates(self) -> None:
         with patch.object(app, "SOURCES_DIRECTORY", self.sources):
             questions, companies = app._read_leetcode_questions()

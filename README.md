@@ -5,7 +5,14 @@ practice, and general behavioral prompts.
 
 ## Run the app
 
-Install Python 3.10+ and Git, then run from this repository:
+Install Python 3.10+ and Git. Install the Python dependencies from this
+repository:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+Then start the app:
 
 ```powershell
 python app.py
@@ -59,6 +66,7 @@ python -m unittest discover -s tests -v
 ## Layout
 
 - `app.py` - local web server, data parsing, filtering, and refresh endpoint.
+- `requirements.txt` - Python dependencies for the app and its deployment.
 - `web\` - responsive browser UI.
 - `scripts\fetch_sources.py` - shallow-clones or fast-forwards upstream data.
 - `tests\` - source-fetcher and question filtering tests.

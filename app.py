@@ -1,10 +1,6 @@
 """Local web app for browsing company interview-preparation questions."""
 
 from __future__ import annotations
-from flask import Flask
-
-# THIS IS CRITICAL: Vercel scans specifically for a top-level 'app' variable
-app = Flask(__name__)
 
 import csv
 import json
@@ -19,9 +15,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
+from flask import Flask, jsonify, request, send_from_directory
+
 from scripts.fetch_sources import REPOSITORY_ROOT, SOURCES, SourceUpdateError, fetch_source
 
 
+app = Flask(__name__)
 WEB_DIRECTORY = REPOSITORY_ROOT / "web"
 SOURCES_DIRECTORY = REPOSITORY_ROOT / "sources"
 REFRESH_MARKER = SOURCES_DIRECTORY / ".last-refresh.json"
@@ -445,6 +444,28 @@ def _get_questions(filters: dict[str, str]) -> dict[str, object]:
     }
 
 
+@app.get("/")
+def index():
+    return send_from_directory(WEB_DIRECTORY, "index.html")
+
+
+@app.get("/app.js")
+@app.get("/styles.css")
+def static_asset():
+    return send_from_directory(WEB_DIRECTORY, request.path.lstrip("/"))
+
+
+@app.get("/api/questions")
+def questions_api():
+    filters = request.args.to_dict()
+    try:
+        return jsonify(get_questions(filters))
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except (SourceUpdateError, OSError) as error:
+        return jsonify({"error": str(error)}), 500
+
+
 def refresh_sources() -> str:
     if shutil.which("git") is None:
         raise SourceUpdateError("Git is required but was not found on PATH.")
@@ -462,6 +483,17 @@ def refresh_sources() -> str:
             raise SourceUpdateError(f"Could not save source refresh status: {error}") from error
         _load_question_data.cache_clear()
         return refreshed_at
+
+
+@app.post("/api/refresh")
+def refresh_api():
+    try:
+        return jsonify({"refreshed_at": refresh_sources()})
+    except (SourceUpdateError, OSError, subprocess.CalledProcessError) as error:
+        detail = str(error)
+        if isinstance(error, subprocess.CalledProcessError):
+            detail = f"Git update failed (exit code {error.returncode}): {error.cmd}"
+        return jsonify({"error": detail}), 500
 
 
 def auto_refresh_sources(
