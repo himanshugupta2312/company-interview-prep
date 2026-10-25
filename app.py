@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -487,6 +488,11 @@ def refresh_sources() -> str:
 
 @app.post("/api/refresh")
 def refresh_api():
+    if os.environ.get("VERCEL") == "1":
+        return jsonify(
+            {"error": "Source data is refreshed at deployment. Redeploy to update sources."}
+        ), 501
+
     try:
         return jsonify({"refreshed_at": refresh_sources()})
     except (SourceUpdateError, OSError, subprocess.CalledProcessError) as error:

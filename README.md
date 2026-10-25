@@ -31,6 +31,10 @@ next search or page reload. The LeetCode source includes company coding lists; t
 system-design source supplies general design prompts, not verified
 company-specific questions.
 
+For Vercel deployments, the build fetches the source repositories and bundles
+the CSV and Markdown data needed by the app. Deploy again to refresh this data;
+Vercel functions cannot update their deployed source files at runtime.
+
 ## Filters and data limitations
 
 - Search by company, question text, topic, LeetCode difficulty, and the
@@ -67,6 +71,7 @@ python -m unittest discover -s tests -v
 
 - `app.py` - local web server, data parsing, filtering, and refresh endpoint.
 - `requirements.txt` - Python dependencies for the app and its deployment.
+- `pyproject.toml` - Vercel build hook that fetches upstream source data.
 - `web\` - responsive browser UI.
 - `scripts\fetch_sources.py` - shallow-clones or fast-forwards upstream data.
 - `tests\` - source-fetcher and question filtering tests.

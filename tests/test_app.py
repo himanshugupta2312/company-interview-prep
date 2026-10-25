@@ -70,6 +70,18 @@ class QuestionDataTests(unittest.TestCase):
             {"error": "Question offset and limit must be integers."},
         )
 
+    def test_vercel_refresh_requires_a_new_deployment(self) -> None:
+        with patch.dict("os.environ", {"VERCEL": "1"}):
+            with patch.object(app, "refresh_sources") as refresh_sources:
+                response = app.app.test_client().post("/api/refresh")
+
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.get_json(),
+            {"error": "Source data is refreshed at deployment. Redeploy to update sources."},
+        )
+        refresh_sources.assert_not_called()
+
     def test_company_problem_csv_files_are_aggregated_without_duplicates(self) -> None:
         with patch.object(app, "SOURCES_DIRECTORY", self.sources):
             questions, companies = app._read_leetcode_questions()

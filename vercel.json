@@ -1,14 +1,13 @@
 {
-  "builds": [
-    {
-      "src": "app.py",
-      "use": "@vercel/python"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app.py": {
+      "includeFiles": [
+        "web/**",
+        "sources/leetcode-company-wise-problems/**/*.csv",
+        "sources/system-design-notes/*/Readme.md",
+        "sources/system-design-notes/*/README.md"
+      ]
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app.py"
-    }
-  ]
+  }
 }

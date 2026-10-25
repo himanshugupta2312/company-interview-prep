@@ -1,0 +1,2 @@
+[tool.vercel.scripts]
+build = "python scripts/fetch_sources.py"
