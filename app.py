@@ -5,8 +5,10 @@ from __future__ import annotations
 import csv
 import json
 import re
+import shutil
 import subprocess
 import sys
+import threading
 from datetime import datetime, timezone
 from functools import lru_cache
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -19,6 +21,8 @@ from scripts.fetch_sources import REPOSITORY_ROOT, SOURCES, SourceUpdateError, f
 WEB_DIRECTORY = REPOSITORY_ROOT / "web"
 SOURCES_DIRECTORY = REPOSITORY_ROOT / "sources"
 REFRESH_MARKER = SOURCES_DIRECTORY / ".last-refresh.json"
+AUTO_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60
+SOURCE_LOCK = threading.RLock()
 LEETCODE_REPOSITORY_URL = "https://github.com/liquidslr/leetcode-company-wise-problems"
 SYSTEM_DESIGN_REPOSITORY_URL = "https://github.com/liquidslr/system-design-notes"
 LEETCODE_WINDOW_LABELS = {
@@ -220,6 +224,11 @@ def _load_question_data() -> tuple[list[dict[str, object]], list[str], list[dict
 
 
 def get_questions(filters: dict[str, str]) -> dict[str, object]:
+    with SOURCE_LOCK:
+        return _get_questions(filters)
+
+
+def _get_questions(filters: dict[str, str]) -> dict[str, object]:
     leetcode, companies, general_questions = _load_question_data()
     requested_company = filters.get("company", "").strip()
     selected_company = next(
@@ -292,18 +301,35 @@ def get_questions(filters: dict[str, str]) -> dict[str, object]:
 
 
 def refresh_sources() -> str:
-    for source in SOURCES:
-        fetch_source(source)
-    refreshed_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    try:
-        REFRESH_MARKER.write_text(
-            json.dumps({"refreshed_at": refreshed_at}, indent=2) + "\n",
-            encoding="utf-8",
-        )
-    except OSError as error:
-        raise SourceUpdateError(f"Could not save source refresh status: {error}") from error
-    _load_question_data.cache_clear()
-    return refreshed_at
+    if shutil.which("git") is None:
+        raise SourceUpdateError("Git is required but was not found on PATH.")
+
+    with SOURCE_LOCK:
+        for source in SOURCES:
+            fetch_source(source)
+        refreshed_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        try:
+            REFRESH_MARKER.write_text(
+                json.dumps({"refreshed_at": refreshed_at}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+        except OSError as error:
+            raise SourceUpdateError(f"Could not save source refresh status: {error}") from error
+        _load_question_data.cache_clear()
+        return refreshed_at
+
+
+def auto_refresh_sources(
+    stop_event: threading.Event,
+    interval_seconds: int = AUTO_REFRESH_INTERVAL_SECONDS,
+) -> None:
+    while not stop_event.wait(interval_seconds):
+        try:
+            refreshed_at = refresh_sources()
+        except (SourceUpdateError, OSError, subprocess.CalledProcessError) as error:
+            print(f"Automatic source refresh failed: {error}", file=sys.stderr)
+        else:
+            print(f"Automatic source refresh completed at {refreshed_at}")
 
 
 class InterviewPrepHandler(BaseHTTPRequestHandler):
@@ -360,7 +386,7 @@ class InterviewPrepHandler(BaseHTTPRequestHandler):
         try:
             refreshed_at = refresh_sources()
             self._send_json(200, {"refreshed_at": refreshed_at})
-        except (SourceUpdateError, subprocess.CalledProcessError) as error:
+        except (SourceUpdateError, OSError, subprocess.CalledProcessError) as error:
             detail = str(error)
             if isinstance(error, subprocess.CalledProcessError):
                 detail = f"Git update failed (exit code {error.returncode}): {error.cmd}"
@@ -373,18 +399,29 @@ class InterviewPrepHandler(BaseHTTPRequestHandler):
 def main() -> None:
     try:
         refreshed_at = refresh_sources()
-    except (SourceUpdateError, subprocess.CalledProcessError) as error:
+    except (SourceUpdateError, OSError, subprocess.CalledProcessError) as error:
         print(f"Could not fetch interview-prep sources: {error}", file=sys.stderr)
         raise SystemExit(1) from error
 
     server = ThreadingHTTPServer(("127.0.0.1", 8000), InterviewPrepHandler)
+    stop_refresh = threading.Event()
+    refresh_thread = threading.Thread(
+        target=auto_refresh_sources,
+        args=(stop_refresh,),
+        name="interview-prep-source-refresh",
+        daemon=True,
+    )
+    refresh_thread.start()
     print(f"Sources checked at {refreshed_at}")
+    print("Sources will be checked automatically every 24 hours.")
     print("Open http://127.0.0.1:8000 in your browser. Press Ctrl+C to stop.")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nStopping interview prep.")
     finally:
+        stop_refresh.set()
+        refresh_thread.join(timeout=1)
         server.server_close()
 
 

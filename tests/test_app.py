@@ -2,7 +2,7 @@ import csv
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import app
 
@@ -135,6 +135,16 @@ class QuestionDataTests(unittest.TestCase):
         with patch.object(app, "SOURCES_DIRECTORY", self.sources):
             with self.assertRaisesRegex(ValueError, "integers"):
                 app.get_questions({"offset": "first"})
+
+    def test_automatic_refresh_runs_again_after_each_interval(self) -> None:
+        stop_event = unittest.mock.Mock()
+        stop_event.wait.side_effect = [False, True]
+
+        with patch.object(app, "refresh_sources", return_value="2026-10-24T12:00:00+00:00") as refresh:
+            app.auto_refresh_sources(stop_event, interval_seconds=60)
+
+        self.assertEqual(stop_event.wait.call_args_list, [call(60), call(60)])
+        refresh.assert_called_once_with()
 
 
 if __name__ == "__main__":

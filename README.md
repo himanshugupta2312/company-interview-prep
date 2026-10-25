@@ -14,12 +14,13 @@ python app.py
 On startup, the app checks out or fast-forwards both upstream repositories, then
 serves the UI at <http://127.0.0.1:8000>. Keep the terminal open while using it;
 press `Ctrl+C` to stop. Use **Refresh sources** in the UI to check for new
-upstream questions without restarting the app. If an update fails, the app
-shows the error instead of presenting it as a successful refresh.
+upstream questions without restarting the app. The app also checks for changes
+automatically every 24 hours while it is running. If an update fails, the app
+shows or logs the error instead of presenting it as a successful refresh.
 
 The repositories are checked out into `sources\` and remain ignored by Git.
-The UI reads the current checked-out data, so refreshed questions appear in the
-same company search. The LeetCode source includes company coding lists; the
+The UI reads the current checked-out data, so refreshed questions appear on the
+next search or page reload. The LeetCode source includes company coding lists; the
 system-design source supplies general design prompts, not verified
 company-specific questions.
 
