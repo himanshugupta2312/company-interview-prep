@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f8fa">
+    <title>Company Interview Prep</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Company Interview Prep home">
+          <span class="brand-mark" aria-hidden="true">↗</span>
+          <span>Interview Prep</span>
+        </a>
+        <div class="sync-status">
+          <span id="sync-indicator" class="status-dot" aria-hidden="true"></span>
+          <span id="sync-label">Checking sources…</span>
+          <button id="refresh-button" class="refresh-button" type="button">Refresh sources</button>
+        </div>
+      </header>
+
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">YOUR INTERVIEW, BETTER PREPARED</p>
+        <h1 id="page-title">The right questions.<br><span>One place to prepare.</span></h1>
+        <p class="hero-copy">Find company interview questions, system design practice, and behavioral prompts. Refresh any time to check for new source questions.</p>
+      </section>
+
+      <section class="search-panel" aria-label="Question filters">
+        <div class="form-grid">
+          <label class="field company-field">
+            <span>Company</span>
+            <input id="company" type="search" list="company-options" placeholder="Search or choose a company" autocomplete="off">
+            <datalist id="company-options"></datalist>
+          </label>
+          <label class="field">
+            <span>Position <span class="optional">(optional)</span></span>
+            <input id="position" type="text" placeholder="e.g. Backend Engineer" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Question type</span>
+            <select id="type">
+              <option value="all">All question types</option>
+              <option value="leetcode">LeetCode</option>
+              <option value="system-design">System design</option>
+              <option value="behavioral">Behavioral</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Search questions</span>
+            <input id="search" type="search" placeholder="Search titles or topics" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>LeetCode difficulty</span>
+            <select id="difficulty">
+              <option value="">Any difficulty</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Asked in</span>
+            <select id="period">
+              <option value="">Any time window</option>
+              <option value="all time">All time</option>
+              <option value="last 30 days">Last 30 days</option>
+              <option value="last 3 months">Last 3 months</option>
+              <option value="last 6 months">Last 6 months</option>
+              <option value="more than 6 months">More than 6 months</option>
+            </select>
+          </label>
+        </div>
+        <p id="position-notice" class="filter-note"></p>
+      </section>
+
+      <section class="results-section" aria-live="polite" aria-busy="false">
+        <div class="results-heading">
+          <div>
+            <p class="eyebrow">QUESTION BANK</p>
+            <h2 id="results-title">Choose a company to get started</h2>
+          </div>
+          <div class="total-count"><strong id="total-count">0</strong><span>questions</span></div>
+        </div>
+        <div class="count-row" aria-label="Questions by type">
+          <span><i class="count-dot leetcode-dot"></i>LeetCode <b id="leetcode-count">0</b></span>
+          <span><i class="count-dot design-dot"></i>System design <b id="design-count">0</b></span>
+          <span><i class="count-dot behavioral-dot"></i>Behavioral <b id="behavioral-count">0</b></span>
+        </div>
+        <p id="error-message" class="error-message" role="alert" hidden></p>
+        <div id="question-list" class="question-list"></div>
+        <button id="load-more-button" class="load-more-button" type="button" hidden>Load more questions</button>
+      </section>
+
+      <footer class="footer">
+        <p>Company coding lists and system-design notes are fetched from their upstream repositories. Behavioral prompts are general practice prompts, not verified company questions.</p>
+        <div class="source-links">
+          <a href="https://github.com/liquidslr/leetcode-company-wise-problems" target="_blank" rel="noreferrer">LeetCode source ↗</a>
+          <a href="https://github.com/liquidslr/system-design-notes" target="_blank" rel="noreferrer">System design source ↗</a>
+          <a href="https://github.com/gregorojstersek/behavioral-interview-list-of-questions" target="_blank" rel="noreferrer">Behavioral questions reference ↗</a>
+        </div>
+      </footer>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

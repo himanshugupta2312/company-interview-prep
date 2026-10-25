@@ -1,29 +1,72 @@
 # Company Interview Prep
 
-Fetch the latest company-wise LeetCode problems and system-design notes from:
+A small local web app for browsing company-wise coding problems, system-design
+practice, and general behavioral prompts.
 
-- [leetcode-company-wise-problems](https://github.com/liquidslr/leetcode-company-wise-problems)
-- [system-design-notes](https://github.com/liquidslr/system-design-notes)
+## Run the app
 
-## Fetch or update the sources
+Install Python 3.10+ and Git, then run from this repository:
 
-Install Git, then run from this repository:
+```powershell
+python app.py
+```
+
+On startup, the app checks out or fast-forwards both upstream repositories, then
+serves the UI at <http://127.0.0.1:8000>. Keep the terminal open while using it;
+press `Ctrl+C` to stop. Use **Refresh sources** in the UI to check for new
+upstream questions without restarting the app. If an update fails, the app
+shows the error instead of presenting it as a successful refresh.
+
+The repositories are checked out into `sources\` and remain ignored by Git.
+The UI reads the current checked-out data, so refreshed questions appear in the
+same company search. The LeetCode source includes company coding lists; the
+system-design source supplies general design prompts, not verified
+company-specific questions.
+
+## Filters and data limitations
+
+- Search by company, question text, topic, LeetCode difficulty, and the
+  upstream time-window lists. Leave the company blank to browse general
+  system-design and behavioral practice.
+- The upstream company problem lists do not identify the job position for
+  each question. The optional position field is accepted as context, but does
+  not remove or relabel questions; the UI calls out this limitation rather
+  than guessing which role asked a question.
+- The upstream sources do not provide a behavioral interview dataset. The app
+  includes a small set of general, original practice prompts, not
+  company-specific questions. A public behavioral-question repository is
+  linked in the UI as a reference, but its content is not copied into this
+  project because a reuse license was not found.
+- Upstream coding questions may be dated or incomplete. “Refresh sources”
+  checks for changes in those repositories; it cannot guarantee that any
+  interview report is exhaustive or current.
+
+## Refresh sources from the command line
 
 ```powershell
 python scripts\fetch_sources.py
 ```
 
-The script shallow-clones each source on the first run and fast-forwards it on
-later runs. The source trees are saved in `sources\` and are intentionally
-ignored by Git; this repository contains the fetcher and source references,
-not copies of their content.
+## Run tests
 
-The fetched files remain subject to their respective upstream authors'
-copyright, license, and usage terms. Check each source repository for current
-terms before using or redistributing its material.
+```powershell
+python -m unittest discover -s tests -v
+```
 
 ## Layout
 
-- `scripts\fetch_sources.py` - fetches or updates both source repositories.
-- `sources\leetcode-company-wise-problems\` - created by the fetch command.
-- `sources\system-design-notes\` - created by the fetch command.
+- `app.py` - local web server, data parsing, filtering, and refresh endpoint.
+- `web\` - responsive browser UI.
+- `scripts\fetch_sources.py` - shallow-clones or fast-forwards upstream data.
+- `tests\` - source-fetcher and question filtering tests.
+- `sources\` - ignored local upstream checkouts, created on first run.
+
+Fetched files remain subject to their respective upstream authors' copyright,
+license, and usage terms. Review each source repository's current terms before
+redistributing fetched material.
+
+## Upstream sources
+
+- [liquidslr/leetcode-company-wise-problems](https://github.com/liquidslr/leetcode-company-wise-problems)
+- [liquidslr/system-design-notes](https://github.com/liquidslr/system-design-notes)
+- [gregorojstersek/behavioral-interview-list-of-questions](https://github.com/gregorojstersek/behavioral-interview-list-of-questions) - reference only; not imported.
