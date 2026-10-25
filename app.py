@@ -1,6 +1,10 @@
 """Local web app for browsing company interview-preparation questions."""
 
 from __future__ import annotations
+from flask import Flask
+
+# THIS IS CRITICAL: Vercel scans specifically for a top-level 'app' variable
+app = Flask(__name__)
 
 import csv
 import json
