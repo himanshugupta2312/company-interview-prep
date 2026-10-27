@@ -374,9 +374,9 @@ def _get_questions(filters: dict[str, str]) -> dict[str, object]:
         raise ValueError("Question offset and limit must be integers.") from error
 
     results: list[dict[str, object]] = []
-    if selected_type in ("all", "leetcode") and selected_company:
+    if selected_type in ("all", "leetcode") and (selected_company or not requested_company):
         for question in leetcode:
-            if question["company"] != selected_company:
+            if selected_company and question["company"] != selected_company:
                 continue
             if selected_difficulty and str(question["difficulty"]).casefold() != selected_difficulty:
                 continue

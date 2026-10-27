@@ -91,6 +91,20 @@ class QuestionDataTests(unittest.TestCase):
         self.assertEqual(questions[0]["time_windows"], ["Last 30 days", "All time"])
         self.assertEqual(questions[0]["topics"], ["Array", "Hash Table"])
 
+    def test_questions_are_listed_by_default_without_a_company(self) -> None:
+        with (
+            patch.object(app, "SOURCES_DIRECTORY", self.sources),
+            patch.object(app, "REFRESH_MARKER", self.marker),
+        ):
+            data = app.get_questions({})
+            unknown = app.get_questions({"company": "No Such Co", "type": "leetcode"})
+
+        self.assertIsNone(data["selected_company"])
+        self.assertEqual(data["counts"]["leetcode"], 1)
+        self.assertGreater(data["counts"]["system-design"], 0)
+        self.assertGreater(data["counts"]["behavioral"], 0)
+        self.assertEqual(unknown["total"], 0)
+
     def test_question_search_combines_sources_and_keeps_shared_questions(self) -> None:
         with (
             patch.object(app, "SOURCES_DIRECTORY", self.sources),

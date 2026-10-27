@@ -131,10 +131,8 @@ function renderQuestions(data, append) {
     elements.questionList.innerHTML = data.results.length
       ? data.results.map(renderCard).join("")
       : `<div class="empty-state">
-        <strong>${data.selected_company ? "No questions match these filters." : "Choose a company to browse its LeetCode questions."}</strong>
-        ${data.selected_company
-          ? "Try another time period or clear a filter. General system-design and behavioral questions are included when they match your search."
-          : "System-design and behavioral practice are available below even before you choose a company."}
+        <strong>No questions match these filters.</strong>
+        Try another company, time period, or search term, or clear a filter.
       </div>`;
   }
   loadedCount += data.results.length;
